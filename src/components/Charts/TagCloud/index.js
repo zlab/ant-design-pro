@@ -19,27 +19,33 @@ class TagCloud extends Component {
   };
 
   componentDidMount() {
-    this.initTagCloud();
-    this.renderChart();
-    window.addEventListener('resize', this.resize);
+    requestAnimationFrame(() => {
+      this.initTagCloud();
+      this.renderChart();
+    });
+    window.addEventListener('resize', this.resize, { passive: true });
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (JSON.stringify(nextProps.data) !== JSON.stringify(this.props.data)) {
-      this.renderChart(nextProps);
+  componentDidUpdate(preProps) {
+    const { data } = this.props;
+    if (JSON.stringify(preProps.data) !== JSON.stringify(data)) {
+      this.renderChart(this.props);
     }
   }
 
   componentWillUnmount() {
     this.isUnmount = true;
+    window.cancelAnimationFrame(this.requestRef);
     window.removeEventListener('resize', this.resize);
   }
 
   resize = () => {
-    this.renderChart();
+    this.requestRef = requestAnimationFrame(() => {
+      this.renderChart();
+    });
   };
 
-  saveRootRef = (node) => {
+  saveRootRef = node => {
     this.root = node;
   };
 
@@ -77,7 +83,7 @@ class TagCloud extends Component {
 
   @Bind()
   @Debounce(500)
-  renderChart = (nextProps) => {
+  renderChart(nextProps) {
     // const colors = ['#1890FF', '#41D9C7', '#2FC25B', '#FACC14', '#9AE65C'];
     const { data, height } = nextProps || this.props;
 
@@ -129,7 +135,7 @@ class TagCloud extends Component {
     } else {
       onload();
     }
-  };
+  }
 
   render() {
     const { className, height } = this.props;
